@@ -1,0 +1,27 @@
+{
+  "name": "remote-master-port",
+  "version": "0.1.0",
+  "description": "Master port for async communication between iframes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/websh-org/remote-master-port.git"
+  },
+  "keywords": [
+    "websh",
+    "webshell",
+    "message",
+    "channel",
+    "master",
+    "port"
+  ],
+  "author": "Zoran Obradović",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/websh-org/remote-master-port/issues"
+  },
+  "homepage": "https://github.com/websh-org/remote-master-port#readme"
+}
