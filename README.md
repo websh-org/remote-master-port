@@ -1,14 +1,38 @@
 # remote-master-port
-Master port for async cross-site messaging
+Master port for async cross-iframe messaging. Load this in the top window.
 
-````js
-const { RemoteMasterPort } = require("@websh/remote-master-port");
+See [remote-slave-port](https://github.com/websh-org/remote-slave-port) for the other side of the channel (in the iframe).
 
-const iframe = document.getElementById("my-iframe");
-const childFrame = new RemoteMasterPort(iframe);
+The master port must innitiate the connection. 
 
-await childFrame.load(url);
-console.log(await childFrame.send('ping'));
-console.log(await childFrame.send('echo',{foo:'bar'}));
+
+## Synopsis
+````bash
+$ npm install @websh/remote-master-port
 ````
 
+````js
+import { RemoteMasterPort } from "@websh/remote-slave-port";
+
+// the slave port in a child iframe must use 
+// the same channelId to establish a channel
+const channelId = "my-channel"; 
+const myIframe = document.getElementById('my-iframe')
+const myMasterPort = new RemoteMasterPort(channelId,myIframe);
+````
+
+## Methods
+
+All methods return the MasterSlavePort object, so you can chain method calls.
+
+### `async connect()`
+Connect to the iframe. Returns the slave port's manifest or throws an error if connection has failed.
+
+### `send( String command, Object args )`
+Send a command to the slave port, ignore any results.
+
+### `async request( String command, Object args )`
+Send a command to the slave port, and wait for the result.
+
+### `.on( String event, Object data )`
+Handle an event sent by the slave port.

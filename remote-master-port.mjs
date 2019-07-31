@@ -1,30 +1,42 @@
-module.exports.RemoteMasterPort = class RemoteMasterPort {
-  static async connect(frame, origin = "*") {
-    var channel = new Channel(frame, origin);
-    await channel.connect();
-    return channel;
+export class RemoteMasterPort {
+  static async connect(...args) {
+    const it = new this(...args);
+    await it.connect();
+    return it;
   }
-  constructor(frame, origin = "*") {
-    this.frame = frame;
+  constructor(id, iframe, origin="*") {
+    this.id = id;
+    this.iframe = iframe;
     this.origin = origin;
     this.connected = false;
     this.active = true;
     this._handlers = {};
     this._pending = {};
   }
+
   connect() {
     this.channel = new MessageChannel();
     this.port = this.channel.port1;
     return new Promise((resolve, reject) => {
-      this.frame.postMessage({ "SOUTH-TOOTH": "connect", "version": "1.0.0", port: this.channel.port2 }, this.origin, [this.channel.port2]);
+      
+      const timeout = setTimeout(
+        ()=>reject(new Error("connect-timeout"))
+        ,5000
+      );
+
+      this.iframe.contentWindow.postMessage({ [this.id]: "connect", "version": "1.0.0", port: this.channel.port2 }, this.origin, [this.channel.port2]);
       this.port.onmessage = ev => {
-        if (!ev.data || ev.data["SOUTH-TOOTH"] !== "connected") return this._deactivate();
-        this.manifest = ev.data.manifest || {};
-        this.connected = true;
-        this.port.onmessage = ev => {
-          this._receive(ev.data || {});
-        };
-        resolve();
+        try {
+          if (!ev.data || ev.data[this.id] !== "connected") return this._deactivate();
+          this.manifest = ev.data.manifest || {}
+          this.connected = true;
+          this.port.onmessage = ev => {
+            this._receive(ev.data || {});
+          };
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
       };
     });
   }
