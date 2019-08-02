@@ -1,10 +1,9 @@
 {
   "name": "@websh/remote-master-port",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Master port for async cross-site messaging",
   "module": "remote-master-port.mjs",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/websh-org/remote-master-port.git"
