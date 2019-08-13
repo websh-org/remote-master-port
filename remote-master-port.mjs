@@ -71,7 +71,7 @@ export class RemoteMasterPort {
       const pending = this._pending[re];
       if (!pending) return;
       delete this._pending[re];
-      if (error) return pending.reject(error);
+      if (error) return pending.reject({error,data});
       return pending.resolve(result);
     } 
     if (event) {
