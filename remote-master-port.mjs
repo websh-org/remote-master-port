@@ -4,7 +4,7 @@ export class RemoteMasterPort {
     await it.connect();
     return it;
   }
-  constructor(id, iframe, {origin="*",debug=false}) {
+  constructor(id, iframe, { origin = "*", debug = false }) {
     this.id = id;
     this.iframe = iframe;
     this.origin = origin;
@@ -19,12 +19,12 @@ export class RemoteMasterPort {
     this.channel = new MessageChannel();
     this.port = this.channel.port1;
     return new Promise((resolve, reject) => {
-      
+
       const timeout = setTimeout(
-        ()=>reject(new Error("port-connect-timeout"))
-        ,5000
+        () => reject(new Error("port-connect-timeout"))
+        , 5000
       );
-      
+
       this.iframe.contentWindow.postMessage({ [this.id]: "connect", "version": "1.0.0", port: this.channel.port2 }, this.origin, [this.channel.port2]);
       this.port.onmessage = ev => {
         try {
@@ -46,8 +46,8 @@ export class RemoteMasterPort {
     this.send('port-disconnect');
     this._deactivate();
   }
-  on(event,handler) {
-    this._handlers[event]=handler;
+  on(event, handler) {
+    this._handlers[event] = handler;
   }
   request(cmd, args = {}, transfer = []) {
     if (!this.connected) throw new Error("port-not-connected");
@@ -66,19 +66,19 @@ export class RemoteMasterPort {
     if (!this.connected) throw new Error("port-not-connected");
     this.port.postMessage(msg, transfer);
   }
-  _receive({ event, data, re, result, error }) {
-    if (re) {
-      const pending = this._pending[re];
-      if (!pending) return;
-      delete this._pending[re];
-      if (error) return pending.reject({error,data});
-      return pending.resolve(result);
-    } 
+  _receive({ event, data, re, result, error, message = error }) {
+    const pending = this._pending[re];
+    if (!pending) return;
+    delete this._pending[re];
+    if (error) {
+      return pending.reject(new Error(error, { message, data }));
+    }
     if (event) {
       const handler = this._handlers[event];
       if (!handler) return;
       handler(data);
     }
+    return pending.resolve(result);
   }
   _deactivate() {
     this.connected = false;
