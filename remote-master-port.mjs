@@ -25,7 +25,7 @@ export class RemoteMasterPort {
         , 5000
       );
 
-      this.iframe.contentWindow.postMessage({ [this.id]: "connect", "version": "1.0.0", port: this.channel.port2 }, null, [this.channel.port2]);
+      this.iframe.contentWindow.postMessage({ [this.id]: "connect", "version": "1.0.0", port: this.channel.port2 }, this.origin, [this.channel.port2]);
       this.port.onmessage = ev => {
         try {
           if (!ev.data || ev.data[this.id] !== "connected") return this._deactivate();
