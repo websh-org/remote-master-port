@@ -49,7 +49,7 @@ export class RemoteMasterPort {
   on(event, handler) {
     this._handlers[event] = handler;
   }
-  request(cmd, args = {}, transfer = []) {
+  request(cmd, args = {}, {transfer=[],timeout=10000} = []) {
     if (!this.connected) throw new Error("port-not-connected");
     const rsvp = Math.random().toString(36).substr(2);
     const promise = new Promise((resolve, reject) => {
