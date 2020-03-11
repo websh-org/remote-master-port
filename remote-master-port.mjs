@@ -4,18 +4,18 @@ export class RemoteMasterPort {
     await it.connect();
     return it;
   }
-  constructor(id, iframe, { origin = "*", debug = false }) {
+  constructor(id, iframe, { origin = "*", debug = false, handler }) {
     this.id = id;
     this.iframe = iframe;
     this.origin = origin;
     this.debug = debug;
     this.connected = false;
     this.active = true;
-    this._handlers = {};
+    this.handler = handler || (()=>{});
     this._pending = {};
   }
 
-  connect() {
+  connect(data={}) {
     this.channel = new MessageChannel();
     this.port = this.channel.port1;
     return new Promise((resolve, reject) => {
@@ -25,19 +25,30 @@ export class RemoteMasterPort {
         , 5000
       );
 
-      this.iframe.contentWindow.postMessage({ [this.id]: "connect", "version": "1.0.0", port: this.channel.port2 }, this.origin, [this.channel.port2]);
-      this.port.onmessage = ev => {
+      this.iframe.contentWindow.postMessage({ 
+        [this.id]: "connect", 
+        version: "1.0.0", 
+        port: this.channel.port2,
+        data
+      }, this.origin, [this.channel.port2]);
+      this.port.onmessage = async ev => {
         try {
-          if (!ev.data || ev.data[this.id] !== "connected") return this._deactivate();
           clearTimeout(timeout);
-          const manifest = ev.data.manifest || {}
-          this.connected = true;
-          this.port.onmessage = ev => {
-            this._receive(ev.data || {});
-          };
-          resolve(manifest);
-        } catch (err) {
-          reject(err);
+          const {data} = ev;
+          switch (data && data[this.id]) {
+            case "rejected":
+              console.error(data.error);
+              throw new Error("port-connect-rejected");
+            case "connected":
+              this.connected = true;
+              this.port.onmessage = e => this._receive(e.data || {});
+              return resolve(data.manifest||{});
+            default:
+              throw new Error("port-connect-badresponse");
+          }
+        } catch (error) {
+          this._deactivate();
+          reject(error);
         }
       };
     });
@@ -46,9 +57,7 @@ export class RemoteMasterPort {
     this.send('port-disconnect');
     this._deactivate();
   }
-  on(event, handler) {
-    this._handlers[event] = handler;
-  }
+ 
   request(cmd, args = {}, {transfer=[],timeout=10000} = []) {
     if (!this.connected) throw new Error("port-not-connected");
     const rsvp = Math.random().toString(36).substr(2);
@@ -74,9 +83,7 @@ export class RemoteMasterPort {
       return pending.reject({ error, data });
     }
     if (event) {
-      const handler = this._handlers[event];
-      if (!handler) return;
-      handler(data);
+      this.handler(event,data);
     }
     return pending.resolve(result);
   }
