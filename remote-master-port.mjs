@@ -76,14 +76,16 @@ export class RemoteMasterPort {
     this.port.postMessage(msg, transfer);
   }
   _receive({ event, data, re, result, error, message = error }) {
+    if (event) {
+      console.log('event',event,data)
+      return this.handler(event,data);
+    }
+    console.log('received',{ event, data, re, result, error })
     const pending = this._pending[re];
     if (!pending) return;
     delete this._pending[re];
     if (error) {
       return pending.reject({ error, data });
-    }
-    if (event) {
-      this.handler(event,data);
     }
     return pending.resolve(result);
   }
